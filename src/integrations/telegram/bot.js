@@ -26,12 +26,22 @@ function initBot() {
     // Create bot instance in polling mode for local development
     // In production, webhook will be used via the webhook endpoint
     const isDev = process.env.NODE_ENV !== 'production';
+    
+    // Add error handling for bot creation
     bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { 
-      polling: isDev 
+      polling: isDev,
+      filepath: false // Disable file downloads to prevent timeouts
+    });
+
+    // Add error handler for bot
+    bot.on('error', (error) => {
+      console.error('Telegram bot error:', error);
     });
 
     // Set up command descriptions
-    bot.setMyCommands(BOT_COMMANDS);
+    bot.setMyCommands(BOT_COMMANDS).catch(error => {
+      console.error('Error setting bot commands:', error);
+    });
 
     // Register command handlers
     setupCommandHandlers(bot);
@@ -503,6 +513,28 @@ todoController.deleteUserTodo = async (userId, todoId) => {
     return { error: 'Server error' };
   }
 };
+
+// Add a function to check bot health
+function checkBotHealth() {
+  if (!bot) {
+    console.warn('Bot not initialized');
+    return false;
+  }
+  
+  try {
+    // Try to get bot info to verify it's working
+    bot.getMe().then(info => {
+      console.log('Bot health check successful:', info);
+      return true;
+    }).catch(error => {
+      console.error('Bot health check failed:', error);
+      return false;
+    });
+  } catch (error) {
+    console.error('Error checking bot health:', error);
+    return false;
+  }
+}
 
 // Export the bot functions
 module.exports = {

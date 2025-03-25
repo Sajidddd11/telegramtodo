@@ -14,44 +14,31 @@ const bot = telegramBot.initBot();
  */
 router.post('/webhook', async (req, res) => {
   try {
-    // Log detailed webhook information
-    console.log('Webhook received:', JSON.stringify({
-      timestamp: new Date().toISOString(),
-      headers: req.headers,
-      body: req.body ? (typeof req.body === 'object' ? Object.keys(req.body) : 'non-object') : 'empty',
-      method: req.method,
-      url: req.url,
-      environment: process.env.NODE_ENV || 'development'
-    }, null, 2));
-    
-    // Get bot instance
-    const botInstance = telegramBot.getBot();
-    
-    if (!botInstance) {
-      console.error('Bot not initialized, cannot process webhook');
-      return res.status(500).json({ 
-        success: false,
-        error: 'Bot not initialized',
-        timestamp: new Date().toISOString()
-      });
+    console.log('\n=== Telegram Webhook Request ===');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('================================\n');
+
+    if (!req.body) {
+      console.error('No request body received');
+      return res.status(400).json({ error: 'No request body' });
     }
-    
-    // Process the update from Telegram
-    await botInstance.processUpdate(req.body);
-    console.log('Webhook processed successfully');
-    
-    res.status(200).json({ 
-      success: true,
-      message: 'Webhook processed successfully',
-      timestamp: new Date().toISOString()
-    });
+
+    const update = req.body;
+    console.log('Processing update:', JSON.stringify(update, null, 2));
+
+    // Process the update
+    await bot.handleUpdate(update);
+    console.log('Successfully processed webhook update');
+
+    res.status(200).json({ ok: true });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    res.status(500).json({ 
-      success: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -278,6 +265,36 @@ router.get('/list-users', async (req, res) => {
   } catch (error) {
     console.error('Error listing users:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Add health check endpoint
+router.get('/health', async (req, res) => {
+  try {
+    const botInstance = telegramBot.getBot();
+    if (!botInstance) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Bot not initialized',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Get bot info to verify it's working
+    const botInfo = await botInstance.getMe();
+    res.json({
+      status: 'ok',
+      bot: botInfo,
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
