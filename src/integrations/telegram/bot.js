@@ -27,11 +27,19 @@ function initBot() {
     // In production, webhook will be used via the webhook endpoint
     const isDev = process.env.NODE_ENV !== 'production';
     
-    // Add error handling for bot creation
-    bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { 
-      polling: isDev,
+    // Initialize bot with appropriate options based on environment
+    const options = isDev ? {
+      polling: true,
       filepath: false // Disable file downloads to prevent timeouts
-    });
+    } : {
+      polling: false,
+      filepath: false,
+      webHook: {
+        port: process.env.PORT || 3000
+      }
+    };
+
+    bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, options);
 
     // Add error handler for bot
     bot.on('error', (error) => {
@@ -45,6 +53,16 @@ function initBot() {
 
     // Register command handlers
     setupCommandHandlers(bot);
+
+    // In production, set up webhook
+    if (!isDev) {
+      const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL || `https://telegramtodo.vercel.app/api/telegram/webhook`;
+      bot.setWebHook(webhookUrl).then(() => {
+        console.log('Webhook set successfully:', webhookUrl);
+      }).catch(error => {
+        console.error('Error setting webhook:', error);
+      });
+    }
 
     console.log('Telegram bot initialized successfully');
     return bot;

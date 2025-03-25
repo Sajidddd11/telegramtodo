@@ -298,4 +298,35 @@ router.get('/health', async (req, res) => {
   }
 });
 
+// Add webhook verification endpoint
+router.get('/verify-webhook', async (req, res) => {
+  try {
+    const botInstance = telegramBot.getBot();
+    if (!botInstance) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Bot not initialized',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Get webhook info
+    const webhookInfo = await botInstance.getWebHookInfo();
+    
+    res.json({
+      status: 'ok',
+      webhook: webhookInfo,
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Webhook verification error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 module.exports = router; 
