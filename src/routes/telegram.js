@@ -14,28 +14,44 @@ const bot = telegramBot.initBot();
  */
 router.post('/webhook', async (req, res) => {
   try {
+    // Log detailed webhook information
     console.log('Webhook received:', JSON.stringify({
       timestamp: new Date().toISOString(),
-      headers: req.headers['content-type'],
+      headers: req.headers,
       body: req.body ? (typeof req.body === 'object' ? Object.keys(req.body) : 'non-object') : 'empty',
-      method: req.method
-    }));
+      method: req.method,
+      url: req.url,
+      environment: process.env.NODE_ENV || 'development'
+    }, null, 2));
     
     // Get bot instance
     const botInstance = telegramBot.getBot();
     
     if (!botInstance) {
       console.error('Bot not initialized, cannot process webhook');
-      return res.status(500).send('Bot not initialized');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Bot not initialized',
+        timestamp: new Date().toISOString()
+      });
     }
     
     // Process the update from Telegram
     await botInstance.processUpdate(req.body);
     console.log('Webhook processed successfully');
-    res.status(200).send('OK');
+    
+    res.status(200).json({ 
+      success: true,
+      message: 'Webhook processed successfully',
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    res.status(500).send('Error processing update');
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
