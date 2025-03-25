@@ -1,0 +1,23 @@
+# Linking Telegram Account to User Account with curl
+
+# Step 1: Login to get an access token
+curl -X POST https://todobackend-seven.vercel.app/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sajid1","password":"00888246"}' \
+  -v
+
+# After running the command above, you'll get a response with an access token
+# Copy the access_token value and replace YOUR_ACCESS_TOKEN below
+
+# Step 2: Link Telegram account
+curl -X POST https://todobackend-seven.vercel.app/telegram/link \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{"token":"615218"}' \
+  -v
+
+# Alternative URLs if the backend is running locally
+# Login:
+# curl -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"username":"sajid1","password":"00888246"}' -v
+# Link:
+# curl -X POST http://localhost:3000/api/telegram/link -H "Content-Type: application/json" -H "Authorization: Bearer YOUR_ACCESS_TOKEN" -d '{"token":"615218"}' -v 
