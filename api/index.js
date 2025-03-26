@@ -23,7 +23,14 @@ console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`Telegram bot integration: ${process.env.TELEGRAM_BOT_TOKEN ? 'Enabled' : 'Disabled'}`);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow all methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
+  credentials: true, // Allow cookies
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
 app.use(express.json());
 
 // Test route for quick verification

@@ -2,8 +2,16 @@ const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
   try {
+    // Debug request info
+    console.log('=== Auth Request Info ===');
+    console.log('Path:', req.path);
+    console.log('Method:', req.method);
+    console.log('Origin:', req.headers.origin);
+    console.log('Host:', req.headers.host);
+    
     // Get token from header
     const authHeader = req.headers.authorization;
+    console.log('Auth header:', authHeader ? 'Present' : 'Missing');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ 
@@ -14,6 +22,7 @@ const authMiddleware = (req, res, next) => {
 
     // Extract token
     const token = authHeader.split(' ')[1];
+    console.log('Token (first 20 chars):', token ? token.substring(0, 20) + '...' : 'None');
 
     if (!token) {
       return res.status(401).json({ 
@@ -33,6 +42,7 @@ const authMiddleware = (req, res, next) => {
       }
       
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Token decoded successfully. User ID:', decoded.user?.id);
       
       // Add user info to request
       req.user = decoded;

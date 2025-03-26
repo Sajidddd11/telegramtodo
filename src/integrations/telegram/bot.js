@@ -23,21 +23,28 @@ function initBot() {
   }
 
   try {
-    // Create bot instance in polling mode for local development
-    // In production, webhook will be used via the webhook endpoint
-    const isDev = process.env.NODE_ENV !== 'production';
+    // Get bot mode from environment variable, default to polling if not specified
+    const botMode = (process.env.BOT_MODE || 'polling').toLowerCase();
+    console.log(`Initializing Telegram bot in ${botMode} mode`);
     
-    // Initialize bot with appropriate options based on environment
-    const options = isDev ? {
-      polling: true,
-      filepath: false // Disable file downloads to prevent timeouts
-    } : {
-      polling: false,
-      filepath: false,
-      webHook: {
-        port: process.env.PORT || 3000
-      }
-    };
+    // Initialize bot with appropriate options based on mode
+    let options;
+    
+    if (botMode === 'webhook') {
+      options = {
+        polling: false,
+        filepath: false,
+        webHook: {
+          port: process.env.PORT || 3000
+        }
+      };
+    } else {
+      // Default to polling mode
+      options = {
+        polling: true,
+        filepath: false // Disable file downloads to prevent timeouts
+      };
+    }
 
     bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, options);
 
@@ -54,14 +61,19 @@ function initBot() {
     // Register command handlers
     setupCommandHandlers(bot);
 
-    // In production, set up webhook
-    if (!isDev) {
-      const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL || `https://telegramtodo.vercel.app/api/telegram/webhook`;
-      bot.setWebHook(webhookUrl).then(() => {
-        console.log('Webhook set successfully:', webhookUrl);
-      }).catch(error => {
-        console.error('Error setting webhook:', error);
-      });
+    // In webhook mode, set up the webhook URL
+    if (botMode === 'webhook') {
+      const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL;
+      
+      if (!webhookUrl) {
+        console.warn('Webhook URL not specified in environment variables. Webhook not set.');
+      } else {
+        bot.setWebHook(webhookUrl).then(() => {
+          console.log('Webhook set successfully:', webhookUrl);
+        }).catch(error => {
+          console.error('Error setting webhook:', error);
+        });
+      }
     }
 
     console.log('Telegram bot initialized successfully');
