@@ -575,16 +575,27 @@ todoController.updateUserTodo = async (userId, todoId, todoData) => {
     }
 
     // Update the todo
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('todos')
       .update({
         ...updateData,
         updated_at: new Date().toISOString()
       })
       .eq('id', todoId)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .select('*')  // Add this to return the updated todo
+      .single();    // Add this to get a single object
 
-    return { error };
+    // Even if error is undefined (no error), we should return the updated todo
+    if (error) {
+      return { error };
+    }
+
+    // Return the updated todo data
+    return { 
+      todo: data || existingTodo,  // Return the updated data or fall back to existing todo
+      error: null 
+    };
   } catch (error) {
     console.error('Error updating todo:', error);
     return { error: 'Server error' };

@@ -156,13 +156,21 @@ async function updateTodo(params) {
     }
     
     // Call the controller to update the todo
-    const { todo, error } = await todoController.updateUserTodo(userId, todoId, updateData);
+    const result = await todoController.updateUserTodo(userId, todoId, updateData);
     
-    if (error) {
-      return { error };
+    // Log the entire result for debugging
+    console.log('Update todo result:', JSON.stringify(result));
+    
+    // Better handling for missing or null errors
+    if (result.error) {
+      return { error: result.error };
     }
-    
-    return { todo };
+
+    // If we got here, the update was successful, even if todo is not in the result
+    return { 
+      todo: result.todo || { id: todoId, ...updateData },
+      success: true 
+    };
   } catch (error) {
     console.error('Error in updateTodo:', error);
     return { error: 'Failed to update todo' };

@@ -708,9 +708,13 @@ async function executeAction(actionName, params) {
       case 'updateTodo':
         result = await aiTools.updateTodo(params);
         
+        // Fix error checking to properly handle undefined or null errors
         if (result.error) {
           return `I couldn't update the task, boss. Error: ${result.error} 😔`;
         }
+        
+        // If we have a result.todo or the update was successful (no error)
+        const todoTitle = result.todo ? result.todo.title : "your task";
         
         const changes = [];
         if (params.title) changes.push(`title to "${params.title}"`);
@@ -725,7 +729,7 @@ async function executeAction(actionName, params) {
           ? ` I updated the ${changes.join(', ')}.` 
           : '';
         
-        return `I've updated the task "${result.todo.title}", boss!${changesText} ✅`;
+        return `I've updated ${todoTitle}, boss!${changesText} ✅`;
         
       case 'deleteTodo':
         result = await aiTools.deleteTodo(params);
