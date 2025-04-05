@@ -507,6 +507,20 @@ todoController.getUserTodos = async (userId) => {
 
 todoController.createUserTodo = async (userId, todoData) => {
   try {
+    // Process the deadline to ensure proper ISO format
+    let formattedDeadline = todoData.deadline;
+    if (todoData.deadline) {
+      try {
+        // Convert the deadline to ISO format to ensure UTC consistency
+        const date = new Date(todoData.deadline);
+        formattedDeadline = date.toISOString();
+        console.log(`Converted deadline from ${todoData.deadline} to ${formattedDeadline}`);
+      } catch (error) {
+        console.error('Error formatting deadline:', error);
+        // In case of error, keep the original deadline
+      }
+    }
+
     const todoId = uuidv4();
     const newTodo = {
       id: todoId,
@@ -514,9 +528,9 @@ todoController.createUserTodo = async (userId, todoData) => {
       description: todoData.description || '',
       is_completed: false,
       priority: todoData.priority || 3,
-      deadline: todoData.deadline,
+      deadline: formattedDeadline,
       user_id: userId,
-      created_at: new Date()
+      created_at: new Date().toISOString()
     };
 
     const { error } = await supabase
@@ -544,12 +558,28 @@ todoController.updateUserTodo = async (userId, todoId, todoData) => {
       return { error: 'Todo not found or permission denied' };
     }
 
+    // Process any deadline updates to ensure proper ISO format
+    const updateData = { ...todoData };
+    
+    if (updateData.deadline) {
+      try {
+        // Convert the deadline to ISO format to ensure UTC consistency
+        const date = new Date(updateData.deadline);
+        updateData.deadline = date.toISOString();
+        console.log(`Converted update deadline from ${todoData.deadline} to ${updateData.deadline}`);
+      } catch (error) {
+        console.error('Error formatting update deadline:', error);
+        // In case of error, keep the original deadline or remove it from the update
+        delete updateData.deadline;
+      }
+    }
+
     // Update the todo
     const { error } = await supabase
       .from('todos')
       .update({
-        ...todoData,
-        updated_at: new Date()
+        ...updateData,
+        updated_at: new Date().toISOString()
       })
       .eq('id', todoId)
       .eq('user_id', userId);

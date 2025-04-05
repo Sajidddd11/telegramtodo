@@ -61,8 +61,33 @@ async function createTodo(params) {
       title,
       description: description || '',
       priority: priority ? parseInt(priority) : 3, // Default to low priority (3)
-      deadline: deadline || null
     };
+
+    // Handle deadline conversion to ensure UTC format
+    if (deadline) {
+      try {
+        // Check if deadline has a timezone offset (like +06:00)
+        if (typeof deadline === 'string' && (deadline.includes('+') || deadline.includes('-') || !deadline.endsWith('Z'))) {
+          // Convert to UTC ISO string
+          const date = new Date(deadline);
+          if (!isNaN(date.getTime())) {
+            todoData.deadline = date.toISOString(); // This converts to UTC format ending with Z
+            console.log(`Converted deadline from ${deadline} to ${todoData.deadline}`);
+          } else {
+            console.error('Invalid date format for deadline:', deadline);
+            return { error: 'Invalid date format for deadline' };
+          }
+        } else {
+          // Already in ISO format or another format that Date can handle
+          todoData.deadline = deadline;
+        }
+      } catch (dateError) {
+        console.error('Error processing deadline date:', dateError);
+        return { error: 'Failed to process deadline date' };
+      }
+    } else {
+      todoData.deadline = null;
+    }
 
     // Call the controller to create the todo
     const { todo, error } = await todoController.createUserTodo(userId, todoData);
@@ -105,7 +130,30 @@ async function updateTodo(params) {
     if (description !== undefined) updateData.description = description;
     if (is_completed !== undefined) updateData.is_completed = !!is_completed; // Convert to boolean
     if (priority !== undefined) updateData.priority = priority;
-    if (deadline !== undefined) updateData.deadline = deadline;
+    
+    // Handle deadline conversion to ensure UTC format
+    if (deadline !== undefined) {
+      try {
+        // Check if deadline has a timezone offset (like +06:00)
+        if (typeof deadline === 'string' && (deadline.includes('+') || deadline.includes('-') || !deadline.endsWith('Z'))) {
+          // Convert to UTC ISO string
+          const date = new Date(deadline);
+          if (!isNaN(date.getTime())) {
+            updateData.deadline = date.toISOString(); // This converts to UTC format ending with Z
+            console.log(`Converted deadline from ${deadline} to ${updateData.deadline}`);
+          } else {
+            console.error('Invalid date format for deadline:', deadline);
+            return { error: 'Invalid date format for deadline' };
+          }
+        } else {
+          // Already in ISO format or another format that Date can handle
+          updateData.deadline = deadline;
+        }
+      } catch (dateError) {
+        console.error('Error processing deadline date:', dateError);
+        return { error: 'Failed to process deadline date' };
+      }
+    }
     
     // Call the controller to update the todo
     const { todo, error } = await todoController.updateUserTodo(userId, todoId, updateData);
