@@ -455,8 +455,17 @@ IMPORTANT: When returning an OUTPUT response, never use markdown formatting with
         }
         // If it's just a regular planning message or other message, continue the conversation
         else if (action.type === "assistant" && action.message) {
-          // If it's a PLAN message or other type, just continue to the next iteration
-          continue;
+          // Only continue if it explicitly mentions PLAN or Observation
+          if (action.message.startsWith("PLAN:") || action.message.startsWith("Observation:")) {
+            continue;
+          }
+          // Otherwise treat it as final output
+          else {
+            finalResponse = action.message;
+            // Clean and format before returning
+            finalResponse = cleanAndFormatResponse(finalResponse);
+            break;
+          }
         }
         // If we can't parse or handle the response, provide a default response
         else {
