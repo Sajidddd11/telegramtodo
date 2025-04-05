@@ -69,9 +69,10 @@ async function main() {
       console.log('2. Link Telegram account');
       console.log('3. Unlink Telegram account');
       console.log('4. List todos (via API)');
-      console.log('5. Exit');
+      console.log('5. Test AI Natural Language Processing');
+      console.log('6. Exit');
       
-      const choice = await askQuestion('\nEnter your choice (1-5): ');
+      const choice = await askQuestion('\nEnter your choice (1-6): ');
       
       switch (choice) {
         case '1': // Check status
@@ -86,7 +87,10 @@ async function main() {
         case '4': // List todos
           await listTodos(apiBaseUrl, loginData.access_token);
           break;
-        case '5': // Exit
+        case '5': // Test AI Natural Language Processing
+          await testAiMode(apiBaseUrl, loginData.access_token);
+          break;
+        case '6': // Exit
           console.log('Goodbye!');
           rl.close();
           return;
@@ -252,6 +256,68 @@ async function listTodos(apiBaseUrl, token) {
     });
   } catch (error) {
     console.error('Error fetching todos:', error.message);
+  }
+}
+
+async function testAiMode(apiBaseUrl, token) {
+  console.log('\n=== Testing AI Natural Language Processing ===');
+  
+  console.log('This test will simulate sending natural language messages to the Telegram bot.');
+  console.log('The server will process these through the OpenAI integration.');
+  
+  // First, check if OpenAI is enabled
+  const aiStatusResponse = await fetch(`${apiBaseUrl}/test`);
+  
+  if (aiStatusResponse.ok) {
+    const statusData = await aiStatusResponse.json();
+    if (!statusData.ai_enabled) {
+      console.log('\n⚠️ AI natural language processing appears to be disabled.');
+      console.log('Make sure OPENAI_API_KEY is set in your environment variables.');
+      return;
+    }
+  }
+  
+  console.log('\n✅ AI natural language processing appears to be enabled.');
+  
+  // Let user input natural language queries
+  while (true) {
+    console.log('\nEnter a natural language query to test (or "exit" to return to menu):');
+    console.log('Examples:');
+    console.log('  - "Add buying groceries to my todos"');
+    console.log('  - "Show me all my todos"');
+    console.log('  - "Mark my first todo as complete"');
+    
+    const query = await askQuestion('\nYour query: ');
+    
+    if (query.toLowerCase() === 'exit') {
+      break;
+    }
+    
+    console.log('\nSimulating natural language processing...');
+    
+    try {
+      // This is a simulation since we can't directly access the Telegram bot
+      // In a real scenario, the user would send this message to the Telegram bot
+      const simulateResponse = await fetch(`${apiBaseUrl}/api/ai/simulate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: query })
+      });
+      
+      if (simulateResponse.ok) {
+        const result = await simulateResponse.json();
+        console.log('\n🤖 AI Response:');
+        console.log(result.response);
+      } else {
+        const errorText = await simulateResponse.text();
+        console.log(`\n❌ Error: ${simulateResponse.status} - ${errorText}`);
+      }
+    } catch (error) {
+      console.log(`\n❌ Error simulating AI: ${error.message}`);
+    }
   }
 }
 

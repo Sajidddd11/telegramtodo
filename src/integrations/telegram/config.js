@@ -11,6 +11,7 @@ const BOT_COMMANDS = [
   { command: 'done', description: 'Mark a todo as complete. Format: /done 1' },
   { command: 'delete', description: 'Delete a todo. Format: /delete 1' },
   { command: 'show', description: 'Show a specific todo. Format: /show 1' },
+  { command: 'ai', description: 'Enable AI natural language mode for todos' },
 ];
 
 module.exports = {

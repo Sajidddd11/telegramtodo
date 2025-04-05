@@ -2,32 +2,36 @@
 
 This guide contains instructions for deploying the Todo API with Telegram integration to Vercel.
 
-## Prerequisites
+## Step 1: Prerequisites
 
-- A Vercel account
-- The Telegram bot token
-- Your Supabase credentials
-- Your JWT secret
+Before deploying to Vercel, make sure you have:
+
+1. A Vercel account (sign up at [vercel.com](https://vercel.com))
+2. Your Telegram bot token (from [BotFather](https://t.me/botfather))
+3. Your Supabase URL and key
+4. A JWT secret (you can generate one using a secure random generator)
+5. An OpenAI API key (sign up at [platform.openai.com](https://platform.openai.com))
+
+## Step 2: Set Environment Variables
+
+In Vercel, you need to set the following environment variables:
+
+1. `SUPABASE_URL` - Your Supabase project URL
+2. `SUPABASE_KEY` - Your Supabase service role key
+3. `JWT_SECRET` - Your JWT secret for token signing
+4. `TELEGRAM_BOT_TOKEN` - Your Telegram bot token
+5. `TELEGRAM_WEBHOOK_URL` - Should be `https://your-vercel-domain.vercel.app/api/telegram/webhook`
+6. `BOT_MODE` - Set to `webhook` for production
+7. `NODE_ENV` - Set to `production`
+8. `OPENAI_API_KEY` - Your OpenAI API key for natural language processing
 
 ## Deployment Steps
 
-1. **Set up Environment Variables in Vercel**
-
-   In your project settings on Vercel, add the following environment variables:
-
-   ```
-   JWT_SECRET=your_jwt_secret
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
-   TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-   NODE_ENV=production
-   ```
-
-2. **Deploy Your Project**
+1. **Deploy Your Project**
 
    Use the Vercel CLI or GitHub integration to deploy your project.
 
-3. **Set Up Telegram Webhook**
+2. **Set Up Telegram Webhook**
 
    After your project is deployed, run the following command to set up the webhook:
 
@@ -37,14 +41,14 @@ This guide contains instructions for deploying the Todo API with Telegram integr
 
    Replace `your-vercel-url.vercel.app` with your actual Vercel URL and `{your_telegram_bot_token}` with your actual bot token.
 
-4. **Verify the Deployment**
+3. **Verify the Deployment**
 
    Test the API by visiting these endpoints:
 
    - Health check: `https://your-vercel-url.vercel.app/`
    - Test endpoint: `https://your-vercel-url.vercel.app/test`
 
-5. **Check Webhook Status**
+4. **Check Webhook Status**
 
    Verify that the webhook is set up correctly:
 

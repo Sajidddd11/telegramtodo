@@ -4,6 +4,8 @@ const { BOT_COMMANDS } = require('./config');
 const telegramDb = require('./database');
 const todoController = require('../../controllers/todoController');
 const supabase = require('../../utils/supabase');
+const aiClient = require('../openai/aiClient');
+const aiTools = require('../openai/aiTools');
 
 // Check for token in environment
 if (!process.env.TELEGRAM_BOT_TOKEN) {
@@ -57,6 +59,9 @@ function initBot() {
     bot.setMyCommands(BOT_COMMANDS).catch(error => {
       console.error('Error setting bot commands:', error);
     });
+
+    // Initialize OpenAI client
+    aiClient.initOpenAIClient();
 
     // Register command handlers
     setupCommandHandlers(bot);
@@ -416,27 +421,66 @@ Please go to your Todo App and enter this code to connect your account.
     }
   });
 
-  // Add a catch-all handler for any message that doesn't match commands
-  bot.on('message', async (msg) => {
+  // Add a new AI mode command
+  bot.onText(/\/ai/, async (msg) => {
     const chatId = msg.chat.id;
-    
+    const userId = await telegramDb.getUserIdByChatId(chatId);
+
+    if (!userId) {
+      await bot.sendMessage(chatId, 
+        "You need to link your account first. Use /start to get a linking code."
+      );
+      return;
+    }
+
+    await bot.sendMessage(chatId, 
+      "🧠 AI mode is now active. You can send me natural language requests about your todos.\n\n" +
+      "Examples:\n" +
+      "- Add grocery shopping to my todos\n" +
+      "- Show me my todos about meetings\n" +
+      "- Mark the grocery shopping task as done\n" +
+      "- Add a high priority task to prepare presentation for tomorrow\n" +
+      "- Delete all completed todos\n\n" +
+      "Type /help to see regular commands."
+    );
+  });
+
+  // Handle non-command messages with AI
+  bot.on('message', async (msg) => {
     // Skip if it's a command
     if (msg.text && msg.text.startsWith('/')) {
       return;
     }
-    
+
+    const chatId = msg.chat.id;
     const userId = await telegramDb.getUserIdByChatId(chatId);
-    
+
     if (!userId) {
-      // Give helpful debugging info
-      await bot.sendMessage(chatId, 
-        `Your chat ID is: ${chatId}\n\n` +
-        `You are not linked to a user account yet. Use /start to get a linking code or contact the administrator.`
+      // Don't respond to messages from unlinked users
+      return;
+    }
+
+    try {
+      // Send typing indicator to show the bot is processing
+      bot.sendChatAction(chatId, 'typing');
+      
+      console.log(`Processing natural language message: "${msg.text}"`);
+
+      // Process the message with OpenAI
+      const response = await aiClient.processNaturalLanguageRequest(
+        userId,
+        msg.text,
+        aiTools
       );
-    } else {
+
+      console.log(`AI response for message "${msg.text}": "${response}"`);
+
+      // Send the response
+      await bot.sendMessage(chatId, response);
+    } catch (error) {
+      console.error('Error processing AI message:', error);
       await bot.sendMessage(chatId, 
-        `You are linked to user ID: ${userId}\n\n` +
-        `Try using the /help command to see available commands.`
+        "Sorry, I encountered an error processing your request. Please try again later."
       );
     }
   });

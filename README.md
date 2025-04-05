@@ -138,31 +138,27 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 
 ### Database Setup for Telegram Integration
 
-Run the following SQL scripts in your Supabase SQL editor to create the required tables:
+Run the necessary SQL scripts from `src/integrations/telegram/setup.sql` in your Supabase SQL editor to create the required tables.
 
-```sql
--- Create table for storing Telegram user links
-CREATE TABLE IF NOT EXISTS telegram_users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  chat_id TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE
-);
+## AI Natural Language Integration
 
--- Create table for temporary linking tokens
-CREATE TABLE IF NOT EXISTS telegram_tokens (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  token TEXT NOT NULL UNIQUE,
-  chat_id TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  used BOOLEAN DEFAULT FALSE
-);
+This backend now includes AI-powered natural language processing for managing todos through Telegram.
 
--- Create necessary indexes and policies
--- For complete setup script, see src/integrations/telegram/setup.sql
+### AI Setup
+
+1. Get an API key from [OpenAI](https://platform.openai.com/)
+2. Add the API key to your `.env` file:
 ```
+OPENAI_API_KEY=your_openai_api_key
+```
+
+### Using AI in Telegram
+
+1. Link your account with the Telegram bot
+2. Type `/ai` to activate AI mode
+3. Send natural language requests like "Add buying groceries to my todos" or "Show me all my high priority tasks"
+
+See `AI_FEATURES.md` for more detailed instructions and examples of how to use natural language to manage your todos.
 
 ### Setting Webhook (Production)
 

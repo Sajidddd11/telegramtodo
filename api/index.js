@@ -5,6 +5,7 @@ const authRoutes = require('../src/routes/auth');
 const todoRoutes = require('../src/routes/todos');
 const userRoutes = require('../src/routes/users');
 const telegramRoutes = require('../src/routes/telegram');
+const aiRoutes = require('../src/routes/ai');
 const errorHandler = require('../src/middleware/errorHandler');
 
 const app = express();
@@ -18,9 +19,16 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
   console.warn('WARNING: SUPABASE_URL or SUPABASE_KEY environment variables are not set');
 }
 
+// Check for missing environment variables
+if(!process.env.JWT_SECRET) console.warn('WARNING: JWT_SECRET is not defined in environment variables');
+if(!process.env.SUPABASE_URL) console.warn('WARNING: SUPABASE_URL is not defined in environment variables');
+if(!process.env.SUPABASE_KEY) console.warn('WARNING: SUPABASE_KEY is not defined in environment variables');
+if(!process.env.OPENAI_API_KEY) console.warn('WARNING: OPENAI_API_KEY is not defined in environment variables');
+
 // Log deployment info
 console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 console.log(`Telegram bot integration: ${process.env.TELEGRAM_BOT_TOKEN ? 'Enabled' : 'Disabled'}`);
+console.log(`AI natural language processing: ${process.env.OPENAI_API_KEY ? 'Enabled' : 'Disabled'}`);
 
 // Middleware
 app.use(cors({
@@ -35,18 +43,22 @@ app.use(express.json());
 
 // Test route for quick verification
 app.get('/test', (req, res) => {
-  res.status(200).json({ 
-    message: 'API test endpoint working',
+  res.json({
+    success: true,
+    message: 'API is working correctly',
     env: process.env.NODE_ENV || 'development',
+    telegram_enabled: !!process.env.TELEGRAM_BOT_TOKEN,
+    ai_enabled: !!process.env.OPENAI_API_KEY,
     timestamp: new Date().toISOString()
   });
 });
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/todos', todoRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/todos', todoRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check route
 app.get('/', (req, res) => {

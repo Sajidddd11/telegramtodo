@@ -4,6 +4,7 @@ const telegramBot = require('../integrations/telegram/bot');
 const telegramDb = require('../integrations/telegram/database');
 const authMiddleware = require('../middleware/auth');
 const supabase = require('../utils/supabase');
+const aiClient = require('../integrations/openai/aiClient');
 
 // Initialize the bot when this module is loaded
 const bot = telegramBot.initBot();
@@ -20,6 +21,7 @@ router.post('/webhook', async (req, res) => {
     console.log('Body:', JSON.stringify(req.body, null, 2));
     console.log('Method:', req.method);
     console.log('Path:', req.path);
+    console.log('OpenAI Enabled:', !!aiClient.getOpenAIClient());
     console.log('================================\n');
 
     if (!req.body) {
@@ -31,7 +33,7 @@ router.post('/webhook', async (req, res) => {
     console.log('Processing update:', JSON.stringify(update, null, 2));
 
     // Process the update
-    await bot.handleUpdate(update);
+    await telegramBot.processUpdate(update);
     console.log('Successfully processed webhook update');
 
     res.status(200).json({ ok: true });
