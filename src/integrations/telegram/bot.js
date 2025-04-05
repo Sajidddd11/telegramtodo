@@ -226,7 +226,8 @@ Please go to your Todo App and enter this code to connect your account.
       let message = "📋 *Your Todos*\n\n";
       todos.forEach((todo, index) => {
         const status = todo.is_completed ? "✅" : "⏳";
-        const dueDate = new Date(todo.deadline).toLocaleDateString();
+        // Format date for Bangladesh timezone
+        const dueDate = formatBangladeshDateTime(todo.deadline);
         message += `${index + 1}. ${status} ${todo.title}\n`;
         if (todo.description) message += `   _${todo.description}_\n`;
         message += `   Due: ${dueDate}\n\n`;
@@ -272,7 +273,7 @@ Please go to your Todo App and enter this code to connect your account.
       }
 
       await bot.sendMessage(chatId, 
-        `✅ Todo created successfully!\n\nTitle: ${todo.title}\nDue: ${new Date(todo.deadline).toLocaleDateString()}`
+        `✅ Todo created successfully!\n\nTitle: ${todo.title}\nDue: ${formatBangladeshDateTime(todo.deadline)}`
       );
     } catch (error) {
       console.error('Error creating todo:', error);
@@ -404,7 +405,7 @@ Please go to your Todo App and enter this code to connect your account.
 
       const todo = todos[todoIndex];
       const status = todo.is_completed ? "Completed ✅" : "Pending ⏳";
-      const dueDate = new Date(todo.deadline).toLocaleDateString();
+      const dueDate = formatBangladeshDateTime(todo.deadline);
       const priority = "⭐".repeat(todo.priority);
 
       let detailText = `📝 *${todo.title}*\n\n`;
@@ -412,7 +413,7 @@ Please go to your Todo App and enter this code to connect your account.
       detailText += `Status: ${status}\n`;
       detailText += `Due: ${dueDate}\n`;
       detailText += `Priority: ${priority}\n`;
-      detailText += `Created: ${new Date(todo.created_at).toLocaleDateString()}`;
+      detailText += `Created: ${formatBangladeshDateTime(todo.created_at)}`;
 
       await bot.sendMessage(chatId, detailText, { parse_mode: 'Markdown' });
     } catch (error) {
@@ -617,4 +618,36 @@ module.exports = {
   setupWebhook,
   processUpdate,
   bot // For backward compatibility
-}; 
+};
+
+// Format date for Bangladesh timezone
+function formatBangladeshDateTime(dateString) {
+  if (!dateString) return 'No deadline';
+  
+  try {
+    // Create date object
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date format:', dateString);
+      return 'Invalid date';
+    }
+    
+    // Format options for Bangladesh time
+    const options = {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true // Use AM/PM format
+    };
+    
+    return new Intl.DateTimeFormat('en-US', options).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return String(dateString); // Return original as string if parsing fails
+  }
+} 

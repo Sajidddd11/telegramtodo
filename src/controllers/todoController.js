@@ -58,6 +58,16 @@ exports.createTodo = async (req, res) => {
       return res.status(400).json({ error: 'Please provide title and deadline' });
     }
 
+    // Process the deadline to ensure proper ISO format
+    let formattedDeadline;
+    try {
+      // Create a new Date object and use toISOString for standardization
+      formattedDeadline = new Date(deadline).toISOString();
+    } catch (error) {
+      console.error('Error formatting deadline:', error);
+      return res.status(400).json({ error: 'Invalid deadline format. Please use a valid date.' });
+    }
+
     const todoId = uuidv4();
     const newTodo = {
       id: todoId,
@@ -65,9 +75,9 @@ exports.createTodo = async (req, res) => {
       description: description || '',
       is_completed: false,
       priority: priority || 5,
-      deadline,
+      deadline: formattedDeadline,
       user_id: userId,
-      created_at: new Date()
+      created_at: new Date().toISOString()
     };
 
     const { data, error } = await supabase
@@ -107,6 +117,17 @@ exports.updateTodo = async (req, res) => {
       return res.status(404).json({ error: 'Todo not found or you do not have permission' });
     }
 
+    // Process the deadline to ensure proper ISO format if provided
+    let formattedDeadline = existingTodo.deadline;
+    if (deadline) {
+      try {
+        formattedDeadline = new Date(deadline).toISOString();
+      } catch (error) {
+        console.error('Error formatting deadline:', error);
+        return res.status(400).json({ error: 'Invalid deadline format. Please use a valid date.' });
+      }
+    }
+
     // Update the todo
     const { data, error } = await supabase
       .from('todos')
@@ -115,8 +136,8 @@ exports.updateTodo = async (req, res) => {
         description: description !== undefined ? description : existingTodo.description,
         is_completed: is_completed !== undefined ? is_completed : existingTodo.is_completed,
         priority: priority !== undefined ? priority : existingTodo.priority,
-        deadline: deadline || existingTodo.deadline,
-        updated_at: new Date()
+        deadline: formattedDeadline,
+        updated_at: new Date().toISOString()
       })
       .eq('id', todoId)
       .eq('user_id', userId);
@@ -206,10 +227,22 @@ exports.createUserTodo = async (userId, todoData) => {
     }
 
     // Ensure deadline is valid
+    let formattedDeadline;
     if (!todoData.deadline) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      todoData.deadline = tomorrow.toISOString();
+      formattedDeadline = tomorrow.toISOString();
+    } else {
+      try {
+        // Process the provided deadline to ensure proper ISO format
+        formattedDeadline = new Date(todoData.deadline).toISOString();
+      } catch (error) {
+        console.error('Error formatting deadline:', error);
+        // Set default deadline if parsing fails
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        formattedDeadline = tomorrow.toISOString();
+      }
     }
 
     // Validate priority
@@ -231,9 +264,9 @@ exports.createUserTodo = async (userId, todoData) => {
       description: todoData.description || '',
       is_completed: false,
       priority: todoData.priority,
-      deadline: todoData.deadline,
+      deadline: formattedDeadline,
       user_id: userId,
-      created_at: new Date()
+      created_at: new Date().toISOString()
     };
 
     const { error } = await supabase

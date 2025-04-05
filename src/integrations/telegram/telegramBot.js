@@ -102,8 +102,26 @@ bot.onText(/\/list/, async (msg) => {
     // Format todos for display
     function formatDate(dateString) {
       if (!dateString) return 'No deadline';
+      
       try {
-        const date = new Date(dateString);
+        // First try to parse the date
+        let date;
+        
+        // Check if the dateString is already an ISO string
+        if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
+          date = new Date(dateString);
+        } else {
+          // If not ISO format, try to create a date object
+          date = new Date(dateString);
+          
+          // Check if date is valid
+          if (isNaN(date.getTime())) {
+            console.error('Invalid date format:', dateString);
+            return 'Invalid date';
+          }
+        }
+        
+        // Format options for Bangladesh time
         const options = {
           timeZone: 'Asia/Dhaka',
           year: 'numeric',
@@ -111,11 +129,13 @@ bot.onText(/\/list/, async (msg) => {
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
-          hour12: true
+          hour12: true // Use AM/PM format
         };
+        
         return new Intl.DateTimeFormat('en-US', options).format(date);
       } catch (error) {
-        return dateString;
+        console.error('Error formatting date:', error, 'Original date string:', dateString);
+        return dateString; // Return original if parsing fails
       }
     }
     
